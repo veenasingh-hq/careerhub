@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import StatsCards from './components/StatsCards';
 import ApplicationCard from './components/ApplicationCard';
 import ApplicationModal from './components/ApplicationModal';
+import FilterBar from './components/FilterBar';
 import {
   getApplications,
   getStats,
@@ -15,6 +16,11 @@ export default function App() {
   const [applications, setApplications] = useState([]);
   const [stats, setStats] = useState({ total: 0, applied: 0, interviews: 0, offers: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
+
+  // Filter & Search States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +42,35 @@ export default function App() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Filtered and Sorted Applications
+  const filteredApplications = useMemo(() => {
+    return applications
+      .filter((app) => {
+        const matchesSearch =
+          app.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          app.role.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesStatus = statusFilter === 'All' || app.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'newest') {
+          return new Date(b.application_date) - new Date(a.application_date);
+        }
+        if (sortBy === 'oldest') {
+          return new Date(a.application_date) - new Date(b.application_date);
+        }
+        if (sortBy === 'company_asc') {
+          return a.company_name.localeCompare(b.company_name);
+        }
+        if (sortBy === 'company_desc') {
+          return b.company_name.localeCompare(a.company_name);
+        }
+        return 0;
+      });
+  }, [applications, searchTerm, statusFilter, sortBy]);
 
   const handleCreateOrUpdate = async (formData) => {
     try {
@@ -82,24 +117,36 @@ export default function App() {
         {/* Dashboard Stats */}
         <StatsCards stats={stats} />
 
+        {/* Filter & Search Bar */}
+        <FilterBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
+
         {/* Applications List Section */}
-        <div className="mt-8">
+        <div className="mt-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-800">Your Applications ({applications.length})</h2>
+            <h2 className="text-lg font-bold text-slate-800">
+              Your Applications ({filteredApplications.length})
+            </h2>
           </div>
 
           {loading ? (
             <div className="bg-white p-8 rounded-xl border border-slate-200 text-center text-slate-500">
               Loading applications... ⏳
             </div>
-          ) : applications.length === 0 ? (
+          ) : filteredApplications.length === 0 ? (
             <div className="bg-white p-12 rounded-xl border border-dashed border-slate-300 text-center">
-              <p className="text-slate-600 font-semibold text-lg">No job applications tracked yet!</p>
-              <p className="text-slate-400 text-sm mt-1">Click "+ Add Application" above to add your first job track.</p>
+              <p className="text-slate-600 font-semibold text-lg">No matching applications found!</p>
+              <p className="text-slate-400 text-sm mt-1">Try resetting search or filters.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {applications.map((app) => (
+              {filteredApplications.map((app) => (
                 <ApplicationCard
                   key={app.id}
                   app={app}
