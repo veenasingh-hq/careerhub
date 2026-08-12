@@ -109,6 +109,34 @@ export default function App() {
     setIsModalOpen(true);
   };
 
+  const handleExportCSV = () => {
+    if (filteredApplications.length === 0) return;
+
+    const headers = ['Company Name', 'Role', 'Location', 'Application Date', 'Status', 'Resume Version', 'Notes'];
+
+    const csvRows = [
+      headers.join(','),
+      ...filteredApplications.map((app) =>
+        [
+          `"${app.company_name.replace(/"/g, '""')}"`,
+          `"${app.role.replace(/"/g, '""')}"`,
+          `"${app.location.replace(/"/g, '""')}"`,
+          `"${app.application_date}"`,
+          `"${app.status}"`,
+          `"${app.resume_version}"`,
+          `"${(app.notes || '').replace(/"/g, '""')}"`,
+        ].join(',')
+      ),
+    ];
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `CareerHub_Applications_${new Date().toISOString().split('T')[0]}.csv`);
+    a.click();
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
       <Navbar onOpenAddModal={handleOpenAddModal} />
@@ -125,6 +153,8 @@ export default function App() {
           setStatusFilter={setStatusFilter}
           sortBy={sortBy}
           setSortBy={setSortBy}
+          onExportCSV={handleExportCSV}
+          totalItems={filteredApplications.length}
         />
 
         {/* Applications List Section */}
@@ -168,4 +198,4 @@ export default function App() {
       />
     </div>
   );
-}
+} 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, ArrowUpDown, Filter } from 'lucide-react';
+import { Search, ArrowUpDown, Filter, Download } from 'lucide-react';
 
 export default function FilterBar({
   searchTerm,
@@ -8,6 +8,8 @@ export default function FilterBar({
   setStatusFilter,
   sortBy,
   setSortBy,
+  onExportCSV,
+  totalItems,
 }) {
   const statusOptions = ['All', 'Applied', 'Interview Scheduled', 'Selected', 'Offer Received', 'Rejected'];
 
@@ -26,7 +28,7 @@ export default function FilterBar({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        {/* Status Dropdown / Filter */}
+        {/* Status Dropdown */}
         <div className="flex items-center space-x-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm">
           <Filter className="w-4 h-4 text-slate-400" />
           <select
@@ -56,6 +58,17 @@ export default function FilterBar({
             <option value="company_desc">Company (Z-A)</option>
           </select>
         </div>
+
+        {/* CSV Export Button */}
+        <button
+          onClick={onExportCSV}
+          disabled={totalItems === 0}
+          title="Export applications to CSV"
+          className="flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>Export CSV</span>
+        </button>
       </div>
     </div>
   );
